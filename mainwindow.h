@@ -2,6 +2,7 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
+#include <QtWidgets>
 
 class MainWindow : public QMainWindow
 {
@@ -10,5 +11,7 @@ class MainWindow : public QMainWindow
 public:
     MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
+private:
+    QToolBar *toolbar;
 };
 #endif // MAINWINDOW_H
