@@ -1,0 +1,13 @@
+<RCC>
+    <qresource prefix="/">
+        <file>images/analysis_n.png</file>
+        <file>images/analysis_s.png</file>
+        <file>images/analysis.png</file>
+        <file>images/edit_n.png</file>
+        <file>images/edit_s.png</file>
+        <file>images/edit.png</file>
+        <file>images/settings_n.png</file>
+        <file>images/settings_s.png</file>
+        <file>images/settings.png</file>
+    </qresource>
+</RCC>
