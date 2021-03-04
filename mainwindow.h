@@ -4,6 +4,7 @@
 #include <QMainWindow>
 #include <QtWidgets>
 #include <QToolButton>
+#include <QStackedWidget>
 
 class MainWindow : public QMainWindow
 {
@@ -13,21 +14,25 @@ public:
     MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
 private:
+    //tool bar
     QToolBar *toolbar;
-    //edit tool button
     QToolButton *edit_tlbtn;
     QIcon *edit_icon_n;
     QIcon *edit_icon_s;
-    //analysis tool button
     QToolButton *analysis_tlbtn;
     QIcon *analysis_icon_n;
     QIcon *analysis_icon_s;
-    //settings tool button
     QToolButton *settings_tlbtn;
     QIcon *settings_icon_n;
     QIcon *settings_icon_s;
 
+    //stacked widget
+    QStackedWidget *stacked_wid;
+    QLabel *fake1;
+    QLabel *fake2;
+    QLabel *fake3;
 private:
+    void create_central_widget();
     void create_tool_bar();
     void create_menu();
 
