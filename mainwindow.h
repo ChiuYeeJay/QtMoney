@@ -3,7 +3,7 @@
 
 #include <QMainWindow>
 #include <QtWidgets>
-#include <pagebutton.h>
+#include <QToolButton>
 
 class MainWindow : public QMainWindow
 {
@@ -13,19 +13,28 @@ public:
     MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
 private:
-    QList<PageButton*> btn_list;
-    int selected_id;
     QToolBar *toolbar;
-    PageButton *edit_btn;
-    PageButton *analysis_btn;
-    PageButton *settings_btn;
+    //edit tool button
+    QToolButton *edit_tlbtn;
+    QIcon *edit_icon_n;
+    QIcon *edit_icon_s;
+    //analysis tool button
+    QToolButton *analysis_tlbtn;
+    QIcon *analysis_icon_n;
+    QIcon *analysis_icon_s;
+    //settings tool button
+    QToolButton *settings_tlbtn;
+    QIcon *settings_icon_n;
+    QIcon *settings_icon_s;
 
 private:
     void create_tool_bar();
     void create_menu();
 
-public slots:
-    void page_buttons_clicked(PageButton *caller);
-    void rcv(){}
+private slots:
+    void edit_tool_button_clicked();
+    void analysis_tool_button_clicked();
+    void settings_tool_button_clicked();
+
 };
 #endif // MAINWINDOW_H
