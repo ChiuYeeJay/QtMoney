@@ -43,12 +43,14 @@ private:
 
     QLabel *minor_class_label;
     QComboBox *minor_class_cb;
-    QPushButton *add_minor_class_btn;
-    QFrame *minor_calss_frame;
+    QPushButton *minor_class_add_btn;
+    QPushButton *minor_class_remove_btn;
+    QListWidget *minor_class_listwid;
     QVBoxLayout *minor_class_frame_layout;
 
     QLabel *money_label;
-    QPushButton *pos_neg_btn;
+    QPushButton *money_posneg_btn;
+    bool money_pos_neg;
     QLineEdit *money_le;
 
     QLabel *note_label;
@@ -77,6 +79,9 @@ private:
 private slots:
     void selected_date_changed();
     void major_class_changed();
+    void money_posneg_reverse();
+    void add_minor_class_clicked();
+    void remove_minor_class_clicked();
 };
 
 #endif // EDITWIDGET_H
