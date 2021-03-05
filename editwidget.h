@@ -28,6 +28,7 @@ private:
     QVBoxLayout *left_layout;
     QGridLayout *right_layout;
     QVBoxLayout *between_layout;
+    QFrame *edit_board_frame;
 
     //edit board
     QWidget *edit_board_widget;
