@@ -5,6 +5,7 @@
 #include <QtWidgets>
 #include <QToolButton>
 #include <QStackedWidget>
+#include <editwidget.h>
 
 class MainWindow : public QMainWindow
 {
@@ -28,7 +29,7 @@ private:
 
     //stacked widget
     QStackedWidget *stacked_wid;
-    QLabel *fake1;
+    EditWidget *edit_widget;
     QLabel *fake2;
     QLabel *fake3;
 private:

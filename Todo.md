@@ -1,9 +1,15 @@
-## PageButton
+## EditBoard
 
-#### 目標功能
-
-- cursor的正常、進入和點擊都有相應的Icon
-- 能夠與同個tool bar的同類互相排他的顯示「正在顯示該頁面」的效果
+- 排版
+  - 日期標籤
+  - 主標籤：Combo box
+  - 項目名稱：Lineedit
+  - 副標籤
+    - Frame
+    - 上方輸入：combobox，加入按鈕
+    - 下方顯示：VBoxlayout，標籤名，刪除按鈕
+  - 花費：正負號按鈕、Lineedit
+  - 備註（可收放）：收放按鈕，Text_edit
 
 
 

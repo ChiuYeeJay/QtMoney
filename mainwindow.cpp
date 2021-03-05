@@ -5,6 +5,7 @@
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
 {
+    setWindowTitle(tr("QtMoney"));
     create_central_widget();
     create_tool_bar();
 }
@@ -14,11 +15,11 @@ MainWindow::~MainWindow()
 }
 
 void MainWindow::create_central_widget(){
-    fake1 = new QLabel(tr("fake1"));
+    edit_widget = new EditWidget();
     fake2 = new QLabel(tr("fake2"));
     fake3 = new QLabel(tr("fake3"));
     stacked_wid = new QStackedWidget(this);
-    stacked_wid->addWidget(fake1);
+    stacked_wid->addWidget(edit_widget);
     stacked_wid->addWidget(fake2);
     stacked_wid->addWidget(fake3);
     setCentralWidget(stacked_wid);
@@ -57,7 +58,7 @@ void MainWindow::create_tool_bar(){
 }
 
 void MainWindow::edit_tool_button_clicked(){
-    qDebug() << "click edit";
+//    qDebug() << "click edit";
     edit_tlbtn->setIcon(*edit_icon_s);
     analysis_tlbtn->setIcon(*analysis_icon_n);
     settings_tlbtn->setIcon(*settings_icon_n);
@@ -65,7 +66,7 @@ void MainWindow::edit_tool_button_clicked(){
 }
 
 void MainWindow::analysis_tool_button_clicked(){
-    qDebug() << "click anal";
+//    qDebug() << "click anal";
     edit_tlbtn->setIcon(*edit_icon_n);
     analysis_tlbtn->setIcon(*analysis_icon_s);
     settings_tlbtn->setIcon(*settings_icon_n);
@@ -73,7 +74,7 @@ void MainWindow::analysis_tool_button_clicked(){
 }
 
 void MainWindow::settings_tool_button_clicked(){
-    qDebug() << "click sett";
+//    qDebug() << "click sett";
     edit_tlbtn->setIcon(*edit_icon_n);
     analysis_tlbtn->setIcon(*analysis_icon_n);
     settings_tlbtn->setIcon(*settings_icon_s);
