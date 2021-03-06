@@ -13,6 +13,18 @@
 #include <QTextEdit>
 #include <QLineEdit>
 
+struct AccountData{
+    QDate date;
+    QDateTime edit_time;
+    QDateTime create_time;
+    QString name;
+    QString major_class;
+    QStringList minor_class;
+    int money;
+    bool money_posneg;
+    QString note;
+};
+
 class EditWidget : public QWidget
 {
     Q_OBJECT
@@ -22,6 +34,8 @@ public:
 public:
     QStringList *major_class_list;
     QList<QStringList> *minor_class_list;
+    typedef QMap<int, QMap<int, QMap<int, QVector<AccountData>>>> AccountDataDateTree;
+    AccountDataDateTree account_data_tree;
 
 private:
     //main layout
@@ -34,6 +48,8 @@ private:
     //edit board
     QWidget *edit_board_widget;
     QLabel *date_label;
+    QDateTime create_time;
+    AccountData *origin_data;
 
     QLabel *major_class_label;
     QComboBox *major_class_cb;
@@ -46,7 +62,6 @@ private:
     QPushButton *minor_class_add_btn;
     QPushButton *minor_class_remove_btn;
     QListWidget *minor_class_listwid;
-    QVBoxLayout *minor_class_frame_layout;
 
     QLabel *money_label;
     QPushButton *money_posneg_btn;
@@ -75,13 +90,18 @@ private:
     void create_fold_button();
 
     void setup_class_lists();
+    void append_account_data_to_tree(AccountData data);
+    void import_account_data(AccountData *org_data);
 
 private slots:
     void selected_date_changed();
     void major_class_changed();
     void money_posneg_reverse();
-    void add_minor_class_clicked();
-    void remove_minor_class_clicked();
+    void minor_class_addbtn_clicked();
+    void minor_class_removebtn_clicked();
+    void minor_class_listwid_selection_changed();
+    void commit_account_board();
+    void reset_account_board();
 };
 
 #endif // EDITWIDGET_H

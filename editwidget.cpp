@@ -28,6 +28,8 @@ void EditWidget::create_edit_board(){
     //time label
     date_label = new QLabel(calander->selectedDate().toString(Qt::ISODate));
     right_layout->addWidget(date_label, 0, 0, 1, 2);
+    create_time = QDateTime::currentDateTime();
+    origin_data = NULL;
     connect(calander, SIGNAL(selectionChanged()), this, SLOT(selected_date_changed()));
 
     //major class
@@ -53,13 +55,15 @@ void EditWidget::create_edit_board(){
 
     minor_class_add_btn = new QPushButton(tr("新增"));
     minor_class_remove_btn = new QPushButton(tr("刪除"));
-    connect(minor_class_add_btn, SIGNAL(clicked()), this, SLOT(add_minor_class_clicked()));
-    connect(minor_class_remove_btn, SIGNAL(clicked()), this, SLOT(remove_minor_class_clicked()));
+    minor_class_remove_btn->setDisabled(true);
+    connect(minor_class_add_btn, SIGNAL(clicked()), this, SLOT(minor_class_addbtn_clicked()));
+    connect(minor_class_remove_btn, SIGNAL(clicked()), this, SLOT(minor_class_removebtn_clicked()));
 
     minor_class_listwid = new QListWidget();
     minor_class_listwid->setFrameShadow(QFrame::Sunken);
     minor_class_listwid->setFrameShape(QFrame::Box);
     minor_class_listwid->setHidden(true);
+    connect(minor_class_listwid, SIGNAL(itemSelectionChanged()), this, SLOT(minor_class_listwid_selection_changed()));
 
     right_layout->addWidget(minor_class_label, 3, 0);
     right_layout->addWidget(minor_class_add_btn, 3, 1);
@@ -88,6 +92,8 @@ void EditWidget::create_edit_board(){
     //commit, reset buttons
     commit_btn = new QPushButton(tr("提交"));
     reset_btn = new QPushButton(tr("重設"));
+    connect(commit_btn, SIGNAL(clicked()), this, SLOT(commit_account_board()));
+    connect(reset_btn, SIGNAL(clicked()), this, SLOT(reset_account_board()));
     right_layout->addWidget(commit_btn, 10,1);
     right_layout->addWidget(reset_btn, 10, 2);
 }
@@ -127,6 +133,30 @@ void EditWidget::setup_class_lists(){
     minor_class_list->insert(4, entertain_ctgr);
 }
 
+void EditWidget::import_account_data(AccountData *org_data){
+    origin_data = NULL;
+    reset_account_board();
+
+    create_time = org_data->create_time;
+    major_class_cb->setCurrentText(org_data->major_class);
+    name_le->setText(org_data->name);
+
+    if(!org_data->minor_class.isEmpty()){
+        minor_class_listwid->setHidden(false);
+        minor_class_listwid->addItems(org_data->minor_class);
+    }
+
+    QString money_str;
+    money_str.setNum(org_data->money);
+    money_le->setText(money_str);
+    money_pos_neg = org_data->money_posneg;
+    money_posneg_btn->setText(tr(money_pos_neg? "收入" : "支出"));
+
+    note_te->setPlainText(org_data->note);
+
+    origin_data = org_data;
+}
+
 void EditWidget::selected_date_changed(){
     QString date_text = calander->selectedDate().toString(Qt::ISODate);
     date_label->setText(date_text);
@@ -144,7 +174,7 @@ void EditWidget::money_posneg_reverse(){
     money_posneg_btn->setText(tr(money_pos_neg? "收入" : "支出"));
 }
 
-void EditWidget::add_minor_class_clicked(){
+void EditWidget::minor_class_addbtn_clicked(){
     if(minor_class_cb->isHidden()){
         minor_class_cb->setHidden(false);
     }
@@ -163,10 +193,76 @@ void EditWidget::add_minor_class_clicked(){
     }
 }
 
-void EditWidget::remove_minor_class_clicked(){
+void EditWidget::minor_class_removebtn_clicked(){
     int index = minor_class_listwid->currentIndex().row();
     if(0 <= index && index < minor_class_listwid->count()){
         minor_class_listwid->takeItem(index);
-        if(minor_class_listwid->count() == 0) minor_class_listwid->setHidden(true);
+        if(minor_class_listwid->count() == 0){
+            minor_class_listwid->setHidden(true);
+            minor_class_remove_btn->setDisabled(true);
+        }
+    }
+}
+
+void EditWidget::minor_class_listwid_selection_changed(){
+    minor_class_remove_btn->setDisabled(false);
+}
+
+void EditWidget::append_account_data_to_tree(AccountData data){
+    if(account_data_tree.constFind(data.date.year()) == account_data_tree.constEnd())
+        account_data_tree.insert(data.date.year(), QMap<int, QMap<int, QList<AccountData>>>());
+    QMap<int, QMap<int, QList<AccountData>>> &year_tree = account_data_tree[data.date.year()];
+    if(year_tree.constFind(data.date.month()) == year_tree.constEnd())
+        year_tree.insert(data.date.month(), QMap<int, QList<AccountData>>());
+    QMap<int, QList<AccountData>> &month_tree = year_tree[data.date.month()];
+    if(month_tree.constFind(data.date.day()) == month_tree.constEnd())
+        month_tree.insert(data.date.day(), QList<AccountData>());
+    QList<AccountData> &day_list = month_tree[data.date.day()];
+    day_list.append(data);
+}
+
+void EditWidget::commit_account_board(){
+    AccountData data;
+
+    bool money_ok;
+    int money = (money_le->text()).toInt(&money_ok);
+    if(!money_ok){
+        qDebug() << "Money Mistake";
+        return;
+    }
+
+    data.date = calander->selectedDate();
+    data.edit_time = QDateTime::currentDateTime();
+    data.create_time = this->create_time;
+    data.name = name_le->text();
+    data.major_class = major_class_cb->currentText();
+    while(minor_class_listwid->count() > 0) data.minor_class.append(minor_class_listwid->takeItem(0)->text());
+    data.money = money;
+    data.money_posneg = money_pos_neg;
+    data.note = note_te->toPlainText();
+
+    if(origin_data == NULL) append_account_data_to_tree(data);
+    else *origin_data = data;
+
+    origin_data = NULL;
+    reset_account_board();
+}
+
+void EditWidget::reset_account_board(){
+    if(origin_data == NULL){
+        create_time = QDateTime::currentDateTime();
+        major_class_cb->setCurrentIndex(0);
+        name_le->setText("");
+        minor_class_cb->setCurrentIndex(0);
+        minor_class_cb->setHidden(true);
+        while(minor_class_listwid->count()) minor_class_listwid->takeItem(0);
+        minor_class_listwid->setHidden(true);
+        money_le->setText("");
+        money_pos_neg = false;
+        money_posneg_btn->setText(tr("支出"));
+        note_te->setText("");
+    }
+    else{
+        import_account_data(origin_data);
     }
 }
