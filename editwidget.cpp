@@ -16,11 +16,11 @@ EditWidget::EditWidget(QWidget *parent) : QWidget(parent)
     main_layout->addWidget(edit_board_frame);
 
     create_calander();
-    create_listwidget();
+    create_account_list();
     create_edit_board();
 
     left_layout->addWidget(calander);
-    left_layout->addWidget(listwidget);
+    left_layout->addWidget(account_list);
     between_layout->addSpacing(400);
 }
 
@@ -102,11 +102,15 @@ void EditWidget::create_calander(){
     calander = new QCalendarWidget();
 }
 
-void EditWidget::create_listwidget(){
-    listwidget = new QListWidget();
-    listwidget->addItem(tr("item1"));
-    listwidget->addItem(tr("item2"));
-    listwidget->addItem(tr("item3"));
+void EditWidget::create_account_list(){
+    account_list = new QListWidget();
+    account_list_update();
+    connect(calander, SIGNAL(selectionChanged()), this, SLOT(account_list_update()));
+    connect(account_list, SIGNAL(doubleClicked(QModelIndex)), this, SLOT(account_list_double_clicked()));
+
+//    account_list->addItem(tr("item1"));
+//    account_list->addItem(tr("item2"));
+//    account_list->addItem(tr("item3"));
 }
 
 void EditWidget::create_fold_button(){
@@ -159,7 +163,7 @@ void EditWidget::import_account_data(AccountData *org_data){
 
 void EditWidget::selected_date_changed(){
     QString date_text = calander->selectedDate().toString(Qt::ISODate);
-    date_label->setText(date_text);
+    if(origin_data == NULL) date_label->setText(date_text);
 }
 
 void EditWidget::major_class_changed(){
@@ -231,7 +235,8 @@ void EditWidget::commit_account_board(){
         return;
     }
 
-    data.date = calander->selectedDate();
+    if(origin_data == NULL) data.date = calander->selectedDate();
+    else data.date = origin_data->date;
     data.edit_time = QDateTime::currentDateTime();
     data.create_time = this->create_time;
     data.name = name_le->text();
@@ -246,6 +251,8 @@ void EditWidget::commit_account_board(){
 
     origin_data = NULL;
     reset_account_board();
+    account_list_update();
+    calander->setSelectedDate(data.date);
 }
 
 void EditWidget::reset_account_board(){
@@ -265,4 +272,23 @@ void EditWidget::reset_account_board(){
     else{
         import_account_data(origin_data);
     }
+}
+
+void EditWidget::account_list_update(){
+    account_list->clear();
+    QDate sel_date = calander->selectedDate();
+    QList<AccountData> a = account_data_tree[sel_date.year()][sel_date.month()][sel_date.day()];
+    if(a.isEmpty()) return;
+    origin_account_list = &account_data_tree[sel_date.year()][sel_date.month()][sel_date.day()];
+
+    for(int i=0;i<a.count();i++){
+        AccountData item = a[i];
+        QString money_str;
+        money_str.setNum(item.money);
+        account_list->insertItem(i,item.major_class + " " + item.name + " " +  money_str);
+    }
+}
+
+void EditWidget::account_list_double_clicked(){
+    import_account_data(&(origin_account_list->operator[](account_list->currentRow())));
 }

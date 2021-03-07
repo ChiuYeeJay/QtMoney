@@ -78,7 +78,8 @@ private:
     QCalendarWidget *calander;
 
     //list
-    QListWidget *listwidget;
+    QListWidget *account_list;
+    QList<AccountData> *origin_account_list;
 
     //button
     QPushButton *fold_btn;
@@ -86,7 +87,7 @@ private:
 private:
     void create_edit_board();
     void create_calander();
-    void create_listwidget();
+    void create_account_list();
     void create_fold_button();
 
     void setup_class_lists();
@@ -102,6 +103,8 @@ private slots:
     void minor_class_listwid_selection_changed();
     void commit_account_board();
     void reset_account_board();
+    void account_list_update();
+    void account_list_double_clicked();
 };
 
 #endif // EDITWIDGET_H
