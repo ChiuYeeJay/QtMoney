@@ -42,8 +42,11 @@ private:
     QHBoxLayout *main_layout;
     QVBoxLayout *left_layout;
     QGridLayout *right_layout;
-    QVBoxLayout *between_layout;
+    QHBoxLayout *between_layout;
     QFrame *edit_board_frame;
+
+    QPushButton *back_today_btn;
+    QPushButton *remove_account_btn;
 
     //edit board
     QWidget *edit_board_widget;
@@ -89,6 +92,7 @@ private:
     void create_calander();
     void create_account_list();
     void create_fold_button();
+    void create_between_buttons();
 
     void setup_class_lists();
     void append_account_data_to_tree(AccountData data);
@@ -105,6 +109,8 @@ private slots:
     void reset_account_board();
     void account_list_update();
     void account_list_double_clicked();
+    void backtoday_btn_clicked();
+    void account_list_sel_row_changed(int index);
 };
 
 #endif // EDITWIDGET_H

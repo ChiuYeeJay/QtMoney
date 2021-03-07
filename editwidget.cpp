@@ -6,9 +6,8 @@ EditWidget::EditWidget(QWidget *parent) : QWidget(parent)
     main_layout = new QHBoxLayout(this);
     left_layout = new QVBoxLayout();
     right_layout = new QGridLayout();
-    between_layout = new QVBoxLayout();
+    between_layout = new QHBoxLayout();
     main_layout->addLayout(left_layout);
-    main_layout->addLayout(between_layout);
     edit_board_frame = new QFrame();
     edit_board_frame->setLayout(right_layout);
     edit_board_frame->setFrameShadow(QFrame::Sunken);
@@ -17,11 +16,12 @@ EditWidget::EditWidget(QWidget *parent) : QWidget(parent)
 
     create_calander();
     create_account_list();
+    create_between_buttons();
     create_edit_board();
 
     left_layout->addWidget(calander);
+    left_layout->addLayout(between_layout);
     left_layout->addWidget(account_list);
-    between_layout->addSpacing(400);
 }
 
 void EditWidget::create_edit_board(){
@@ -107,10 +107,16 @@ void EditWidget::create_account_list(){
     account_list_update();
     connect(calander, SIGNAL(selectionChanged()), this, SLOT(account_list_update()));
     connect(account_list, SIGNAL(doubleClicked(QModelIndex)), this, SLOT(account_list_double_clicked()));
+}
 
-//    account_list->addItem(tr("item1"));
-//    account_list->addItem(tr("item2"));
-//    account_list->addItem(tr("item3"));
+void EditWidget::create_between_buttons(){
+    back_today_btn = new QPushButton(tr("回到今天"));
+    remove_account_btn = new QPushButton(tr("刪除"));
+    remove_account_btn->setDisabled(true);
+    connect(account_list, SIGNAL(currentRowChanged(int)), this, SLOT(account_list_sel_row_changed(int)));
+    connect(back_today_btn, SIGNAL(clicked()), this, SLOT(backtoday_btn_clicked()));
+    between_layout->addWidget(back_today_btn);
+    between_layout->addWidget(remove_account_btn);
 }
 
 void EditWidget::create_fold_button(){
@@ -291,4 +297,13 @@ void EditWidget::account_list_update(){
 
 void EditWidget::account_list_double_clicked(){
     import_account_data(&(origin_account_list->operator[](account_list->currentRow())));
+}
+
+void EditWidget::backtoday_btn_clicked(){
+    calander->setSelectedDate(QDate::currentDate());
+}
+
+void EditWidget::account_list_sel_row_changed(int index){
+    if(index == -1) remove_account_btn->setDisabled(true);
+    else remove_account_btn->setDisabled(false);
 }
