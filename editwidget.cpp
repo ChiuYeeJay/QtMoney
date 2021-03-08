@@ -1,4 +1,10 @@
 #include "editwidget.h"
+#include <QJsonObject>
+#include <QJsonArray>
+#include <QJsonValue>
+#include <QJsonDocument>
+#include <QMapIterator>
+#include <QFile>
 
 EditWidget::EditWidget(QWidget *parent) : QWidget(parent)
 {
@@ -92,8 +98,8 @@ void EditWidget::create_edit_board(){
     //commit, reset buttons
     commit_btn = new QPushButton(tr("提交"));
     reset_btn = new QPushButton(tr("重設"));
-    connect(commit_btn, SIGNAL(clicked()), this, SLOT(commit_account_board()));
-    connect(reset_btn, SIGNAL(clicked()), this, SLOT(reset_account_board()));
+    connect(commit_btn, SIGNAL(clicked()), this, SLOT(account_board_commit()));
+    connect(reset_btn, SIGNAL(clicked()), this, SLOT(account_board_reset()));
     right_layout->addWidget(commit_btn, 10,1);
     right_layout->addWidget(reset_btn, 10, 2);
 }
@@ -115,6 +121,7 @@ void EditWidget::create_between_buttons(){
     remove_account_btn->setDisabled(true);
     connect(account_list, SIGNAL(currentRowChanged(int)), this, SLOT(account_list_sel_row_changed(int)));
     connect(back_today_btn, SIGNAL(clicked()), this, SLOT(backtoday_btn_clicked()));
+    connect(remove_account_btn, SIGNAL(clicked()), this, SLOT(account_list_remove_selected_row()));
     between_layout->addWidget(back_today_btn);
     between_layout->addWidget(remove_account_btn);
 }
@@ -145,7 +152,7 @@ void EditWidget::setup_class_lists(){
 
 void EditWidget::import_account_data(AccountData *org_data){
     origin_data = NULL;
-    reset_account_board();
+    account_board_reset();
 
     create_time = org_data->create_time;
     major_class_cb->setCurrentText(org_data->major_class);
@@ -165,6 +172,50 @@ void EditWidget::import_account_data(AccountData *org_data){
     note_te->setPlainText(org_data->note);
 
     origin_data = org_data;
+}
+
+void EditWidget::save_account_data_file(){
+    //account data to Json
+    QJsonObject json;
+
+    QMapIterator<int, QMap<int, QMap<int, QList<AccountData>>>> it_year(account_data_tree);
+    while(it_year.hasNext()){
+        QMapIterator<int, QMap<int, QList<AccountData>>> it_month(it_year.value());
+        QJsonObject year_obj = QJsonObject();
+        while(it_month.hasNext()){
+            QMapIterator<int, QList<AccountData>> it_day(it_month.value());
+            QJsonObject month_obj = QJsonObject();
+            while(it_day.hasNext()){
+                QJsonObject day_obj = QJsonObject();
+                int count = 0;
+                for(AccountData a:it_day.value()){
+                    QJsonObject jo = QJsonObject();
+                    jo.insert("date", a.date.toString(Qt::ISODate));
+                    jo.insert("edit_time", a.edit_time.toString());
+                    jo.insert("create_time", a.create_time.toString());
+                    jo.insert("name", a.name);
+                    jo.insert("major_class", a.major_class);
+                    QJsonArray minor_arr = QJsonArray();
+                    for(QString s:a.minor_class) minor_arr.append(s);
+                    jo.insert("money", a.money);
+                    jo.insert("money_posneg", a.money_posneg);
+                    jo.insert("note", a.note);
+                    QString key_jo_str;
+                    day_obj.insert(key_jo_str.setNum(count++), jo);
+                }
+                QString key_day_str;
+                month_obj.insert(key_day_str.setNum(it_day.key()), day_obj);
+            }
+            QString key_month_str;
+            month_obj.insert(key_month_str.setNum(it_month.key()), month_obj);
+        }
+        QString key_year_str;
+        json.insert(key_year_str.setNum(it_year.key()), year_obj);
+    }
+    //save json to file
+    QFile file("account_data.json");
+    QJsonDocument jd(json);
+    file.write(jd.toJson());
 }
 
 void EditWidget::selected_date_changed(){
@@ -231,7 +282,7 @@ void EditWidget::append_account_data_to_tree(AccountData data){
     day_list.append(data);
 }
 
-void EditWidget::commit_account_board(){
+void EditWidget::account_board_commit(){
     AccountData data;
 
     bool money_ok;
@@ -256,12 +307,13 @@ void EditWidget::commit_account_board(){
     else *origin_data = data;
 
     origin_data = NULL;
-    reset_account_board();
+    account_board_reset();
     account_list_update();
+    save_account_data_file();
     calander->setSelectedDate(data.date);
 }
 
-void EditWidget::reset_account_board(){
+void EditWidget::account_board_reset(){
     if(origin_data == NULL){
         create_time = QDateTime::currentDateTime();
         major_class_cb->setCurrentIndex(0);
@@ -306,4 +358,10 @@ void EditWidget::backtoday_btn_clicked(){
 void EditWidget::account_list_sel_row_changed(int index){
     if(index == -1) remove_account_btn->setDisabled(true);
     else remove_account_btn->setDisabled(false);
+}
+
+void EditWidget::account_list_remove_selected_row(){
+    origin_account_list->remove(account_list->currentRow());
+    account_list_update();
+    save_account_data_file();
 }

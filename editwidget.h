@@ -34,7 +34,7 @@ public:
 public:
     QStringList *major_class_list;
     QList<QStringList> *minor_class_list;
-    typedef QMap<int, QMap<int, QMap<int, QVector<AccountData>>>> AccountDataDateTree;
+    typedef QMap<int, QMap<int, QMap<int, QList<AccountData>>>> AccountDataDateTree;
     AccountDataDateTree account_data_tree;
 
 private:
@@ -98,6 +98,9 @@ private:
     void append_account_data_to_tree(AccountData data);
     void import_account_data(AccountData *org_data);
 
+    void save_account_data_file();
+//    void load_account_data_file();
+
 private slots:
     void selected_date_changed();
     void major_class_changed();
@@ -105,12 +108,13 @@ private slots:
     void minor_class_addbtn_clicked();
     void minor_class_removebtn_clicked();
     void minor_class_listwid_selection_changed();
-    void commit_account_board();
-    void reset_account_board();
+    void account_board_commit();
+    void account_board_reset();
     void account_list_update();
     void account_list_double_clicked();
     void backtoday_btn_clicked();
     void account_list_sel_row_changed(int index);
+    void account_list_remove_selected_row();
 };
 
 #endif // EDITWIDGET_H
