@@ -28,6 +28,8 @@ EditWidget::EditWidget(QWidget *parent) : QWidget(parent)
     left_layout->addWidget(calander);
     left_layout->addLayout(between_layout);
     left_layout->addWidget(account_list);
+
+    load_account_data_file();
 }
 
 void EditWidget::create_edit_board(){
@@ -228,7 +230,51 @@ void EditWidget::save_account_data_file(){
 }
 
 void EditWidget::load_account_data_file(){
+    //read file
+    QFile fl("account_data.json");
+    QJsonDocument js_data;
+    QJsonObject js_obj;
+    QJsonParseError err;
+    QByteArray in;
+    fl.open(QFile::ReadOnly);
+    in = fl.readAll();
+    js_data = QJsonDocument::fromJson(in, &err);
+    js_obj = js_data.object();
+    fl.close();
 
+    //json to map
+    account_data_tree = AccountDataDateTree();
+    for(QJsonObject::Iterator it_year = js_obj.begin();it_year != js_obj.constEnd();++it_year){
+        QMap<int, QMap<int, QList<AccountData>>> this_year = QMap<int, QMap<int, QList<AccountData>>>();
+        for(QJsonObject::Iterator it_month = it_year->toObject().begin();it_month != it_year->toObject().constEnd();++it_month){
+            QMap<int, QList<AccountData>> this_month = QMap<int, QList<AccountData>>();
+            QStringList month_keys = it_month->toObject().keys();
+            for(QString it_day : month_keys){
+                QList<AccountData> this_day = QList<AccountData>();
+                QJsonArray day_arr = it_month->toObject().value(it_day).toArray();
+                for(int i=0;i<day_arr.count();i++){
+                    AccountData ad = AccountData();
+                    QJsonObject ev = day_arr[i].toObject();
+                    ad.date = QDate::fromString(ev["date"].toString(), Qt::ISODate);
+                    ad.create_time = QDateTime::fromString(ev["create_time"].toString());
+                    ad.edit_time = QDateTime::fromString(ev["edit_time"].toString());
+                    ad.major_class = ev["major_class"].toString();
+                    for(int j=0;j<ev["minor_class"].toArray().count();j++){
+                        ad.minor_class.append(ev["minor_class"].toArray()[j].toString());
+                    }
+                    ad.money = ev["money"].toInt();
+                    ad.money_posneg = ev["money_posneg"].toBool();
+                    ad.name = ev["name"].toString();
+                    ad.note = ev["note"].toString();
+                    this_day.append(ad);
+                }
+                this_month.insert(it_day.toInt(), this_day);
+            }
+            this_year.insert(it_month.key().toInt(), this_month);
+        }
+        account_data_tree.insert(it_year.key().toInt(), this_year);
+    }
+    account_list_update();
 }
 
 void EditWidget::selected_date_changed(){
@@ -348,8 +394,13 @@ void EditWidget::account_board_reset(){
 void EditWidget::account_list_update(){
     account_list->clear();
     QDate sel_date = calander->selectedDate();
-    QList<AccountData> a = account_data_tree[sel_date.year()][sel_date.month()][sel_date.day()];
-    if(a.isEmpty()) return;
+    QList<AccountData> a;
+    if(account_data_tree.contains(sel_date.year()) &&
+       account_data_tree[sel_date.year()].contains(sel_date.month()) &&
+       account_data_tree[sel_date.year()][sel_date.month()].contains(sel_date.day())){
+        a = account_data_tree.value(sel_date.year()).value(sel_date.month()).value(sel_date.day());
+    }
+    else return;
     origin_account_list = &account_data_tree[sel_date.year()][sel_date.month()][sel_date.day()];
 
     for(int i=0;i<a.count();i++){
