@@ -177,45 +177,58 @@ void EditWidget::import_account_data(AccountData *org_data){
 void EditWidget::save_account_data_file(){
     //account data to Json
     QJsonObject json;
+    QJsonObject year_obj, month_obj, jo;
+    QJsonArray day_arr;
 
     QMapIterator<int, QMap<int, QMap<int, QList<AccountData>>>> it_year(account_data_tree);
     while(it_year.hasNext()){
-        QMapIterator<int, QMap<int, QList<AccountData>>> it_month(it_year.value());
-        QJsonObject year_obj = QJsonObject();
+        it_year.next();
+        QMap<int, QMap<int, QList<AccountData>>> map_month = account_data_tree.operator[](it_year.key());
+        QMapIterator<int, QMap<int, QList<AccountData>>> it_month(map_month);
+        year_obj = QJsonObject();
         while(it_month.hasNext()){
-            QMapIterator<int, QList<AccountData>> it_day(it_month.value());
-            QJsonObject month_obj = QJsonObject();
+            it_month.next();
+            QMapIterator<int, QList<AccountData>> it_day(account_data_tree[it_year.key()][it_month.key()]);
+            month_obj = QJsonObject();
             while(it_day.hasNext()){
-                QJsonObject day_obj = QJsonObject();
-                int count = 0;
-                for(AccountData a:it_day.value()){
-                    QJsonObject jo = QJsonObject();
+                it_day.next();
+                day_arr = QJsonArray();
+                for(int i=0; i<it_day.value().count();i++){
+                    AccountData a = it_day.value().value(i);
+                    jo = QJsonObject();
                     jo.insert("date", a.date.toString(Qt::ISODate));
                     jo.insert("edit_time", a.edit_time.toString());
                     jo.insert("create_time", a.create_time.toString());
                     jo.insert("name", a.name);
                     jo.insert("major_class", a.major_class);
                     QJsonArray minor_arr = QJsonArray();
-                    for(QString s:a.minor_class) minor_arr.append(s);
+                    for(int j=0;j<a.minor_class.count();j++) minor_arr.append(a.minor_class.value(j));
+                    jo.insert("minor_class", minor_arr);
                     jo.insert("money", a.money);
                     jo.insert("money_posneg", a.money_posneg);
                     jo.insert("note", a.note);
-                    QString key_jo_str;
-                    day_obj.insert(key_jo_str.setNum(count++), jo);
+                    day_arr.append(jo);
                 }
                 QString key_day_str;
-                month_obj.insert(key_day_str.setNum(it_day.key()), day_obj);
+                month_obj.insert(key_day_str.setNum(it_day.key()), day_arr);
             }
             QString key_month_str;
-            month_obj.insert(key_month_str.setNum(it_month.key()), month_obj);
+            year_obj.insert(key_month_str.setNum(it_month.key()), month_obj);
         }
         QString key_year_str;
         json.insert(key_year_str.setNum(it_year.key()), year_obj);
     }
     //save json to file
     QFile file("account_data.json");
+    file.open(QFileDevice::WriteOnly);
     QJsonDocument jd(json);
-    file.write(jd.toJson());
+    QByteArray out = jd.toJson();
+    file.write(out, qstrlen(out));
+    file.close();
+}
+
+void EditWidget::load_account_data_file(){
+
 }
 
 void EditWidget::selected_date_changed(){
