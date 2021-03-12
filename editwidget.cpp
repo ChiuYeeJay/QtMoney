@@ -244,14 +244,18 @@ void EditWidget::load_account_data_file(){
 
     //json to map
     account_data_tree = AccountDataDateTree();
-    for(QJsonObject::Iterator it_year = js_obj.begin();it_year != js_obj.constEnd();++it_year){
+    QStringList year_keys, month_keys, day_keys;
+    QJsonObject year_obj, month_obj, day_obj;
+    year_keys = js_obj.keys();
+    for(const QString &year_key : year_keys){
         QMap<int, QMap<int, QList<AccountData>>> this_year = QMap<int, QMap<int, QList<AccountData>>>();
-        for(QJsonObject::Iterator it_month = it_year->toObject().begin();it_month != it_year->toObject().constEnd();++it_month){
+        month_keys = js_obj.value(year_key).toObject().keys();
+        for(const QString &month_key : month_keys){
             QMap<int, QList<AccountData>> this_month = QMap<int, QList<AccountData>>();
-            QStringList month_keys = it_month->toObject().keys();
-            for(QString it_day : month_keys){
+            day_keys = js_obj.value(year_key).toObject().value(month_key).toObject().keys();
+            for(const QString &day_key : day_keys){
                 QList<AccountData> this_day = QList<AccountData>();
-                QJsonArray day_arr = it_month->toObject().value(it_day).toArray();
+                QJsonArray day_arr = js_obj.value(year_key).toObject().value(month_key).toObject().value(day_key).toArray();
                 for(int i=0;i<day_arr.count();i++){
                     AccountData ad = AccountData();
                     QJsonObject ev = day_arr[i].toObject();
@@ -268,12 +272,13 @@ void EditWidget::load_account_data_file(){
                     ad.note = ev["note"].toString();
                     this_day.append(ad);
                 }
-                this_month.insert(it_day.toInt(), this_day);
+                this_month.insert(day_key.toInt(), this_day);
             }
-            this_year.insert(it_month.key().toInt(), this_month);
+            this_year.insert(month_key.toInt(), this_month);
         }
-        account_data_tree.insert(it_year.key().toInt(), this_year);
+        account_data_tree.insert(year_key.toInt(), this_year);
     }
+
     account_list_update();
 }
 
